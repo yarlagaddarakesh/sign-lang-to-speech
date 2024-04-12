@@ -1,0 +1,7 @@
+mediapipe
+opencv-python
+scikit-learn
+numpy
+gtts
+pygame
+googletrans==4.0.0-rc1
