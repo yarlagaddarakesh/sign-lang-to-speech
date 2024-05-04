@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Gesture Recognition</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Hand Gesture Recognition</h1>
+        <div class="row">
+            <div class="col-6">
+                <div id="video-container">
+                    <img id="bg" src="{{ url_for('video_feed') }}" style="width: 100%; height: auto;">
+                </div>
+            </div>
+            <div class="col-6">
+                <p>Predicted Output:</p>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="predicted_output" readonly>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" onclick="backspace()">Backspace</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="addSpace()">Space</button>
+                            </div>
+                        </div>
+                        <div id="suggestion-buttons">
+                            <!-- Three buttons for suggestions -->
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <button class="btn btn-outline-primary w-100" id="suggestion1" onclick="addSuggestion(this.innerText)"></button>
+                                </div>
+                                <div class="col-4">
+                                    <button class="btn btn-outline-primary w-100" id="suggestion2" onclick="addSuggestion(this.innerText)"></button>
+                                </div>
+                                <div class="col-4">
+                                    <button class="btn btn-outline-primary w-100" id="suggestion3" onclick="addSuggestion(this.innerText)"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <br><br>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <button class="btn btn-primary mr-2 w-100" onclick="startPrediction()">Start</button>
+                            </div>
+                            <div class="col-4">
+                                <button class="btn btn-danger mr-2 w-100" onclick="stopPrediction()">Stop</button>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="col-12">
+                        <!-- Display translated output dynamically -->
+                        <div id="translated-output" class="m-5" style="display: none;"></div><br>
+                        <!-- Play audio dynamically -->
+                        <audio id="output-audio" controls style="display: none;"></audio>
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </div>
+
+    <!-- Bootstrap JS and jQuery (required for Bootstrap functionality) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        var outputElement = document.getElementById('predicted_output');
+        var translatedOutputElement = document.getElementById('translated-output');
+        var audioElement = document.getElementById('output-audio');
+
+        function startPrediction() {
+            outputElement.value = ""; // Clear the output element
+            translatedOutputElement.style.display = "none"; // Hide translated output
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/start");
+            xhr.send();
+        }
+
+        // Function to handle output updates received via AJAX
+        function updateOutput(newOutput) {
+            outputElement.value = newOutput;
+        }
+
+        function addSpace() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/addspace");
+            xhr.send();
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    updateOutput(xhr.responseText); // Add a space after backspace
+                }
+            }
+        }
+
+        function backspace() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/backspace");
+            xhr.send();
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    updateOutput(xhr.responseText); // Update output after backspace
+                }
+            }
+        }
+
+        function stopPrediction() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/stop");
+            xhr.send();
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var translation = xhr.responseText;
+                    translatedOutputElement.innerText = "Translated Text: " + translation;
+                    translatedOutputElement.style.display = "block"; // Display translated output
+                    audioElement.src = 'output.mp3';
+                    audioElement.style.display = "none";
+                    audioElement.play();
+                }
+            }
+        }
+
+        // Function to handle updating the output dynamically
+        function updateOutputDynamically(output) {
+            outputElement.value = output;
+        }
+
+        function addSuggestion(suggestion) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/addsuggestion");
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.send(JSON.stringify({suggestion: suggestion}));
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    updateOutput(xhr.responseText); // Update output with suggestion text
+                }
+            }
+        }
+
+
+
+        // Polling for updates
+        setInterval(function() {
+            fetch('/update_output')
+                .then(response => response.json())
+                .then(data => {
+                    updateOutputDynamically(data.output);
+                    if (data.suggestions.length > 0) {
+                        // Update suggestion buttons
+                        for (var i = 0; i < 3; i++) {
+                            var suggestionBtn = document.getElementById('suggestion' + (i + 1));
+                            if (i < data.suggestions.length) {
+                                suggestionBtn.innerText = data.suggestions[i];
+                                suggestionBtn.style.display = "block";
+                            } else {
+                                suggestionBtn.style.display = "none";
+                            }
+                        }
+                    } else {
+                        // Hide all suggestion buttons if no suggestions
+                        for (var i = 0; i < 3; i++) {
+                            var suggestionBtn = document.getElementById('suggestion' + (i + 1));
+                            suggestionBtn.style.display = "none";
+                        }
+                    }
+                });
+        }, 1000); // Update every second
+    </script>
+</body>
+</html>

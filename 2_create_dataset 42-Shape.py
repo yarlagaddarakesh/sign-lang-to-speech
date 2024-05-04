@@ -1,6 +1,5 @@
 import os
 import pickle
-
 import mediapipe as mp
 import cv2
 

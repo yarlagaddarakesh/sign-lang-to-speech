@@ -107,7 +107,7 @@ def main():
 
                 current_time = time.time()
 
-                if current_time - last_prediction_time > 2:
+                if current_time - last_prediction_time > 8:
                     if len(data_aux) == 84:  # Check if data_aux has 84 features
                         # Flatten and normalize data_aux to 42 features
                         flattened_data = data_aux[:42]  # Use the first 42 elements
@@ -122,12 +122,12 @@ def main():
 
                     output_text.text(output)  # Update output_text with the latest value of output
 
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
-                cv2.putText(frame, output, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3, cv2.LINE_AA)
+                # cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
+                # cv2.putText(frame, output, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3, cv2.LINE_AA)
 
             stframe.image(frame, channels="BGR")
             key = cv2.waitKey(1)
-            if time.time() - last_prediction_time > 5:
+            if time.time() - last_prediction_time > 20:
                 output_text.empty()
                 translate_and_play(output)
                 stframe.empty()  # Clear the frame after translation and audio playback
