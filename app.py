@@ -44,7 +44,7 @@ app = Flask(__name__)
 
 translator = Translator()
 pygame.mixer.init()
-model_dict = pickle.load(open('./../Create Dataset/model.p', 'rb'))
+model_dict = pickle.load(open('model.p', 'rb'))
 model = model_dict['model']
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
@@ -57,9 +57,9 @@ labels_dict = {
     20: 'K', 21: 'L', 22: 'M', 23: 'N', 24: 'O', 25: 'P', 26: 'Q', 27: 'R', 28: 'S', 29: 'T',
     30: 'U', 31: 'V', 32: 'W', 33: 'X', 34: 'Y', 35: 'Z',
     36: 'home', 37: 'brother', 38: 'pay', 39: 'justice', 40: 'science',
-    41: 'Please', 42: 'Hello', 43: 'You are Welcome', 44: 'Good Bye',
+    41: 'Please', 42: 'Hello', 43: 'You are Welcome', 44: 'Sleep',
     45: 'sorry', 46: 'yes', 47: 'no', 48: 'thanks', 49: 'what',
-    50: 'sad', 51: ' ',52: 'book', 53: 'sleep'
+    50: 'sad', 51: 'book'
 }
 
 prediction_started = False
@@ -112,7 +112,7 @@ def generate_frames():
 
             current_time = time.time()
 
-            if current_time - last_prediction_time > 4:
+            if current_time - last_prediction_time > 7:
                 if len(data_aux) == 84:  # Check if data_aux has 84 features
                     # Flatten and normalize data_aux to 42 features
                     flattened_data = data_aux[:42]  # Use the first 42 elements
